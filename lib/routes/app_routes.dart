@@ -141,10 +141,6 @@ class AppRouter {
   );
 }
 
-// ============================================================================
-// PLACEHOLDER SCREENS (We'll replace these with actual implementations later)
-// ============================================================================
-
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
