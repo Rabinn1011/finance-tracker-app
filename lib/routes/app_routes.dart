@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-// We'll import screens as we build them
-// For now, using placeholder widgets
+import '../screens/auth/login_screen.dart';
+import '../screens/auth/signup_screen.dart';
+// import '../screens/auth/forgot_password_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -170,46 +170,6 @@ class SplashScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Login Screen - Coming Soon'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.go(AppRoutes.home),
-              child: const Text('Go to Home (Test)'),
-            ),
-            TextButton(
-              onPressed: () => context.go(AppRoutes.signup),
-              child: const Text('Sign Up'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SignupScreen extends StatelessWidget {
-  const SignupScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
-      body: const Center(child: Text('Signup Screen - Coming Soon')),
     );
   }
 }

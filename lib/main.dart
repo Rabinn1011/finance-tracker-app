@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import 'core/constants/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'routes/app_routes.dart';
 import 'services/supabase_service.dart';
+import 'providers/auth_provider.dart';
+import 'providers/payment_method_provider.dart';
+import 'providers/category_provider.dart';
+import 'providers/transaction_provider.dart';
 
 void main() async {
   // Ensure Flutter bindings are initialized
@@ -43,15 +48,23 @@ class FinanceTrackerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: AppConstants.appName,
-      debugShowCheckedModeBanner: false,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentMethodProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => TransactionProvider()),
+      ],
+      child: MaterialApp.router(
+        title: AppConstants.appName,
+        debugShowCheckedModeBanner: false,
 
-      // Theme
-      theme: AppTheme.lightTheme,
+        // Theme
+        theme: AppTheme.lightTheme,
 
-      // Routing
-      routerConfig: AppRouter.router,
+        // Routing
+        routerConfig: AppRouter.router,
+      ),
     );
   }
 }
