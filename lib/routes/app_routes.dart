@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
+import '../core/constants/app_colors.dart';
+import '../core/constants/app_text_styles.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
 // import '../screens/auth/forgot_password_screen.dart';
+import '../screens/home/home_page.dart';
 
 /// Route paths
 class AppRoutes {
@@ -141,38 +146,88 @@ class AppRouter {
   );
 }
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = 'v${info.version}';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.account_balance_wallet,
-              size: 100,
-              color: Theme.of(context).colorScheme.primary,
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.account_balance_wallet,
+                    size: 100,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Finance Tracker',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  const SizedBox(height: 48),
+                  ElevatedButton(
+                    onPressed: () => context.go(AppRoutes.login),
+                    child: const Text('Get Started'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Finance Tracker',
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
-            const SizedBox(height: 48),
-            ElevatedButton(
-              onPressed: () => context.go(AppRoutes.login),
-              child: const Text('Get Started'),
+          ),
 
+          Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              children: [
+                Text('Developed by',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 16)),
+                Text('Rabin',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 16)),
+                const SizedBox(height: 4),
+                Text(
+                  _version,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
 
 class ForgotPasswordScreen extends StatelessWidget {
   const ForgotPasswordScreen({super.key});
@@ -182,38 +237,6 @@ class ForgotPasswordScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Forgot Password')),
       body: const Center(child: Text('Forgot Password Screen - Coming Soon')),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Home Screen - Coming Soon'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.push(AppRoutes.addTransaction),
-              child: const Text('Add Transaction'),
-            ),
-            ElevatedButton(
-              onPressed: () => context.push(AppRoutes.analytics),
-              child: const Text('Analytics'),
-            ),
-            ElevatedButton(
-              onPressed: () => context.push(AppRoutes.transactions),
-              child: const Text('All Transactions'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
