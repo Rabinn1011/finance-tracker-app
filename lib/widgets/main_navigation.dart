@@ -33,7 +33,7 @@ class _MainNavigationState extends State<MainNavigation> {
       // Center FAB - handled separately
         break;
       case 3:
-        context.go(AppRoutes.paymentMethods);
+        context.push(AppRoutes.paymentMethods);
         break;
       case 4:
         context.push(AppRoutes.profile);

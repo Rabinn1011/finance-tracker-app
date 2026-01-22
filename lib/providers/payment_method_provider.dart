@@ -17,7 +17,7 @@ class PaymentMethodProvider extends ChangeNotifier {
 
   // Get total balance across all payment methods
   double get totalBalance {
-    return _paymentMethods.fold(0.0, (sum, method) => sum + method.balance);
+    return _paymentMethods.fold(0.0, (sum, method) => sum + method.safeBalance);
   }
 
   // Get payment method by ID

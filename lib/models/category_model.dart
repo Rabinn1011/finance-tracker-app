@@ -1,41 +1,42 @@
 class Category {
   final String id;
-  final String userId;
+  final String? userId;
   final String name;
   final String icon;
-  final String color; // Hex color code
+  final String color;
   final String type; // 'expense' or 'income'
-  final bool isDefault;
-  final DateTime createdAt;
+  final bool? isDefault;
+  final DateTime? createdAt;
 
   Category({
     required this.id,
-    required this.userId,
+    this.userId,
     required this.name,
     required this.icon,
     required this.color,
     required this.type,
-    required this.isDefault,
-    required this.createdAt,
+    this.isDefault,
+    this.createdAt,
   });
 
-  // Check if this is an expense category
+  // Getters
+  bool get safeIsDefault => isDefault ?? false;
   bool get isExpense => type == 'expense';
-
-  // Check if this is an income category
   bool get isIncome => type == 'income';
 
   // Create from JSON (from Supabase)
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
       id: json['id'] as String,
-      userId: json['user_id'] as String,
+      userId: json['user_id'] as String?,
       name: json['name'] as String,
       icon: json['icon'] as String,
       color: json['color'] as String,
       type: json['type'] as String,
-      isDefault: json['is_default'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      isDefault: json['is_default'] as bool?,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
     );
   }
 
@@ -49,7 +50,7 @@ class Category {
       'color': color,
       'type': type,
       'is_default': isDefault,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
     };
   }
 

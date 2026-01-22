@@ -5,6 +5,7 @@ import '../screens/auth/signup_screen.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import'../screens/add_transaction/add_transaction_screen.dart';
 
 // import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_page.dart';
@@ -237,18 +238,6 @@ class ForgotPasswordScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Forgot Password')),
       body: const Center(child: Text('Forgot Password Screen - Coming Soon')),
-    );
-  }
-}
-
-class AddTransactionScreen extends StatelessWidget {
-  const AddTransactionScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Add Transaction')),
-      body: const Center(child: Text('Add Transaction Screen - Coming Soon')),
     );
   }
 }

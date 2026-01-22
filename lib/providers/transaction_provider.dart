@@ -62,6 +62,16 @@ class TransactionProvider extends ChangeNotifier {
     _clearError();
 
     try {
+      // ADD THIS: Check user BEFORE fetching
+      final currentUserId = SupabaseService.instance.currentUserId;
+      print('🔍 Loading transactions for user: $currentUserId');
+
+      if (currentUserId == null) {
+        print('❌ USER ID IS NULL - Cannot fetch transactions');
+        _transactions = [];
+        return;
+      }
+
       final data = await _supabaseService.getTransactions(
         type: type,
         paymentMethodId: paymentMethodId,
@@ -71,8 +81,12 @@ class TransactionProvider extends ChangeNotifier {
         limit: limit,
       );
 
+      print('📦 Raw data from Supabase: ${data.length} items');
       _transactions = data.map((json) => Transaction.fromJson(json)).toList();
+      print('✅ Fetched ${_transactions.length} transactions for user: $currentUserId');
+
     } catch (e) {
+      print('❌ Error in loadTransactions: $e');
       _setError('Failed to load transactions: ${e.toString()}');
     } finally {
       _setLoading(false);

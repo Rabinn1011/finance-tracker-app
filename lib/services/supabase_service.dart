@@ -266,7 +266,11 @@ class SupabaseService {
     DateTime? endDate,
     int? limit,
   }) async {
-    if (currentUserId == null) return [];
+    print('🔍 getTransactions called - currentUserId: $currentUserId');
+    if (currentUserId == null) {
+      print('❌ currentUserId is NULL in getTransactions');
+      return [];
+    }
 
     dynamic query = client
         .from('transactions')
@@ -288,6 +292,7 @@ class SupabaseService {
     if (limit != null) query = query.limit(limit);
 
     final response = await query as List;
+    print('📊 Supabase returned ${response.length} transactions');
 
     return List<Map<String, dynamic>>.from(response);
   }

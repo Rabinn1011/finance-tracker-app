@@ -21,21 +21,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _initData();
   }
+
+  Future<void> _initData() async {
+      _loadData();
+    }
 
   Future<void> _loadData() async {
     final paymentProvider = context.read<PaymentMethodProvider>();
     final transactionProvider = context.read<TransactionProvider>();
 
-    // Use microtask to avoid calling during build
-    await Future.microtask(() async {
+    try {
+      // Fetch payment methods and transactions concurrently
       await Future.wait([
         paymentProvider.loadPaymentMethods(),
-        transactionProvider.loadTransactions(limit: 5),
+        transactionProvider.loadTransactions(),
       ]);
-    });
+
+      print(
+        '✅ Data loaded - Transactions: ${transactionProvider.transactions.length}',
+      );
+    } catch (e) {
+      print('❌ Error loading data: $e');
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {

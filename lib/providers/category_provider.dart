@@ -26,12 +26,12 @@ class CategoryProvider extends ChangeNotifier {
 
   // Get default categories
   List<Category> get defaultCategories {
-    return _categories.where((cat) => cat.isDefault).toList();
+    return _categories.where((cat) => cat.safeIsDefault).toList();
   }
 
   // Get custom categories
   List<Category> get customCategories {
-    return _categories.where((cat) => !cat.isDefault).toList();
+    return _categories.where((cat) => !cat.safeIsDefault).toList();
   }
 
   // Get category by ID
