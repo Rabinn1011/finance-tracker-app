@@ -6,6 +6,7 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import'../screens/add_transaction/add_transaction_screen.dart';
+import'../screens/profile/profile_screen.dart';
 
 // import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_page.dart';
@@ -324,18 +325,6 @@ class CreateBudgetScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Create Budget')),
       body: const Center(child: Text('Create Budget Screen - Coming Soon')),
-    );
-  }
-}
-
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: const Center(child: Text('Profile Screen - Coming Soon')),
     );
   }
 }
