@@ -116,10 +116,24 @@ class TransactionProvider extends ChangeNotifier {
         transactionDate: transactionDate,
       );
 
-      final newTransaction = Transaction.fromJson(data);
-      _transactions.insert(0, newTransaction); // Add to beginning
-      notifyListeners();
-      return true;
+      // Get the transaction ID from the created transaction
+      final transactionId = data['id'] as String;
+
+      // Fetch the complete transaction with joins
+      final completeTransaction = await _supabaseService.getTransaction(transactionId);
+
+      if (completeTransaction != null) {
+        final newTransaction = Transaction.fromJson(completeTransaction);
+        _transactions.insert(0, newTransaction);
+        notifyListeners();
+        return true;
+      } else {
+        // Fallback: use the basic data if fetch fails
+        final newTransaction = Transaction.fromJson(data);
+        _transactions.insert(0, newTransaction);
+        notifyListeners();
+        return true;
+      }
     } catch (e) {
       _setError('Failed to create transaction: ${e.toString()}');
       return false;

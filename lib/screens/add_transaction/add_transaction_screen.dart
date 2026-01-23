@@ -25,6 +25,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   PaymentMethod? _selectedPaymentMethod;
   final _notesController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  bool _isSubmitting = false; // Add this to track submission state
 
   @override
   void initState() {
@@ -90,6 +91,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Future<void> _saveTransaction() async {
+    // Prevent multiple submissions
+    if (_isSubmitting) return;
+
     if (_amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -120,6 +124,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       return;
     }
 
+    // Set submitting state
+    setState(() {
+      _isSubmitting = true;
+    });
+
     final transactionProvider = context.read<TransactionProvider>();
 
     final success = await transactionProvider.createTransaction(
@@ -130,6 +139,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       transactionDate: _selectedDate,
     );
+
+    // Reset submitting state
+    if (mounted) {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
 
     if (success && mounted) {
       // Reload payment methods to get updated balance
@@ -318,8 +334,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _saveTransaction,
-                      child: const Text('CONFIRM TRANSACTION'),
+                      onPressed: _isSubmitting ? null : _saveTransaction,
+                      child: _isSubmitting
+                          ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                          : const Text('CONFIRM TRANSACTION'),
                     ),
                   ),
                 ),
