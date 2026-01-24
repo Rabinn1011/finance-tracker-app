@@ -7,6 +7,12 @@ import '../core/constants/app_text_styles.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import'../screens/add_transaction/add_transaction_screen.dart';
 import'../screens/profile/profile_screen.dart';
+import'../screens/settings/settings_screen.dart';
+import'../screens/analytics/analytics_screen.dart';
+import '../screens/payment_methods/payment_methods_screen.dart';
+import '../screens/transactions/all_transactions_screen.dart';
+import '../screens/transactions/transaction_detail_screen.dart';
+
 
 // import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_page.dart';
@@ -92,8 +98,8 @@ class AppRouter {
       // Transactions list
       GoRoute(
         path: AppRoutes.transactions,
-        name: 'transactions',
-        builder: (context, state) => const TransactionsScreen(),
+        name: 'AllTransactions',
+        builder: (context, state) => const AllTransactionsScreen(),
       ),
 
       // Transaction detail
@@ -243,56 +249,6 @@ class ForgotPasswordScreen extends StatelessWidget {
   }
 }
 
-class AnalyticsScreen extends StatelessWidget {
-  const AnalyticsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Analytics')),
-      body: const Center(child: Text('Analytics Screen - Coming Soon')),
-    );
-  }
-}
-
-class TransactionsScreen extends StatelessWidget {
-  const TransactionsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Transactions')),
-      body: const Center(child: Text('Transactions Screen - Coming Soon')),
-    );
-  }
-}
-
-class TransactionDetailScreen extends StatelessWidget {
-  final String transactionId;
-
-  const TransactionDetailScreen({super.key, required this.transactionId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Transaction Detail')),
-      body: Center(child: Text('Transaction ID: $transactionId')),
-    );
-  }
-}
-
-class PaymentMethodsScreen extends StatelessWidget {
-  const PaymentMethodsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Payment Methods')),
-      body: const Center(child: Text('Payment Methods Screen - Coming Soon')),
-    );
-  }
-}
-
 class AddPaymentMethodScreen extends StatelessWidget {
   const AddPaymentMethodScreen({super.key});
 
@@ -329,17 +285,6 @@ class CreateBudgetScreen extends StatelessWidget {
   }
 }
 
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: const Center(child: Text('Settings Screen - Coming Soon')),
-    );
-  }
-}
 
 class ErrorScreen extends StatelessWidget {
   const ErrorScreen({super.key});

@@ -270,7 +270,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 delegate: SliverChildBuilderDelegate(
                       (context, index) {
                     final transaction = recentTransactions[index];
-                    return Padding(
+                    return InkWell(
+                      onTap: (){
+                        context.push('${AppRoutes.transactionDetail}/${transaction.id}');
+                      },
+                        child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppConstants.spacing24,
                         vertical: AppConstants.spacing8,
@@ -326,6 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
+                    ),
                     );
                   },
                   childCount: recentTransactions.length,
