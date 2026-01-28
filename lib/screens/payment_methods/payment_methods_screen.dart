@@ -193,88 +193,93 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                         horizontal: AppConstants.spacing24,
                         vertical: AppConstants.spacing8,
                       ),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppConstants.spacing16),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadowLight,
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // Icon
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: _getMethodColor(method.type).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                      child: InkWell(
+                        onTap: () {
+                          context.push('/payment-method-detail/${method.id}');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(AppConstants.spacing16),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.shadowLight,
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
-                              child: Icon(
-                                _getMethodIcon(method.type),
-                                color: _getMethodColor(method.type),
-                                size: 28,
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // Icon
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: _getMethodColor(method.type).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                                ),
+                                child: Icon(
+                                  _getMethodIcon(method.type),
+                                  color: _getMethodColor(method.type),
+                                  size: 28,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppConstants.spacing16),
-                            // Details
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              const SizedBox(width: AppConstants.spacing16),
+                              // Details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      method.name,
+                                      style: AppTextStyles.titleMedium,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _getMethodTypeName(method.type),
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Balance
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    method.name,
-                                    style: AppTextStyles.titleMedium,
+                                    '${user?.currencySymbol ?? 'Rs.'} ${method.safeBalance.toStringAsFixed(2)}',
+                                    style: AppTextStyles.titleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
-                                    _getMethodTypeName(method.type),
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                      color: AppColors.textSecondary,
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: method.safeIsActive
+                                          ? AppColors.success.withOpacity(0.1)
+                                          : AppColors.textTertiary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+                                    ),
+                                    child: Text(
+                                      method.safeIsActive ? 'Active' : 'Inactive',
+                                      style: AppTextStyles.labelSmall.copyWith(
+                                        color: method.safeIsActive ? AppColors.success : AppColors.textTertiary,
+                                        fontSize: 9,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            // Balance
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${user?.currencySymbol ?? 'Rs.'} ${method.safeBalance.toStringAsFixed(2)}',
-                                  style: AppTextStyles.titleMedium.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: method.safeIsActive
-                                        ? AppColors.success.withOpacity(0.1)
-                                        : AppColors.textTertiary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-                                  ),
-                                  child: Text(
-                                    method.safeIsActive ? 'Active' : 'Inactive',
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                      color: method.safeIsActive ? AppColors.success : AppColors.textTertiary,
-                                      fontSize: 9,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );

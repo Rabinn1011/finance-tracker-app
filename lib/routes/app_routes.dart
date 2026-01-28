@@ -10,8 +10,10 @@ import'../screens/profile/profile_screen.dart';
 import'../screens/settings/settings_screen.dart';
 import'../screens/analytics/analytics_screen.dart';
 import '../screens/payment_methods/payment_methods_screen.dart';
+import '../screens/payment_methods/add_payment_method_screen.dart';
 import '../screens/transactions/all_transactions_screen.dart';
 import '../screens/transactions/transaction_detail_screen.dart';
+import '../screens/payment_methods/payment_method_detail_screen.dart';
 
 
 // import '../screens/auth/forgot_password_screen.dart';
@@ -37,6 +39,7 @@ class AppRoutes {
   // Payment methods
   static const String paymentMethods = '/payment-methods';
   static const String addPaymentMethod = '/add-payment-method';
+  static const String paymentMethodDetail = '/payment-method-detail';
 
   // Budget routes
   static const String budgets = '/budgets';
@@ -122,6 +125,16 @@ class AppRouter {
         path: AppRoutes.addPaymentMethod,
         name: 'add-payment-method',
         builder: (context, state) => const AddPaymentMethodScreen(),
+      ),
+
+      // Payment Methods Details
+      GoRoute(
+        path: '${AppRoutes.paymentMethodDetail}/:id',  // ← Add :id parameter
+        name: 'payment-method-detail',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;  // ← Extract the ID
+          return PaymentMethodDetailScreen(paymentMethodId: id);  // ← Correct screen!
+        },
       ),
 
       // Budgets
@@ -245,18 +258,6 @@ class ForgotPasswordScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Forgot Password')),
       body: const Center(child: Text('Forgot Password Screen - Coming Soon')),
-    );
-  }
-}
-
-class AddPaymentMethodScreen extends StatelessWidget {
-  const AddPaymentMethodScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Add Payment Method')),
-      body: const Center(child: Text('Add Payment Method Screen - Coming Soon')),
     );
   }
 }
