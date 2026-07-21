@@ -49,7 +49,43 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  // Load transactions with filters
+  /// Fetch transactions without touching shared state.
+  ///
+  /// Use this for screen-local, filtered views (a single category, a single
+  /// payment method, a search result). Writing those into [_transactions]
+  /// would corrupt every other screen reading the shared list.
+  Future<List<Transaction>> fetchTransactions({
+    String? type,
+    String? paymentMethodId,
+    String? categoryId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? limit,
+  }) async {
+    final currentUserId = SupabaseService.instance.currentUserId;
+    print('🔍 Fetching transactions for user: $currentUserId');
+
+    if (currentUserId == null) {
+      print('❌ USER ID IS NULL - Cannot fetch transactions');
+      return [];
+    }
+
+    final data = await _supabaseService.getTransactions(
+      type: type,
+      paymentMethodId: paymentMethodId,
+      categoryId: categoryId,
+      startDate: startDate,
+      endDate: endDate,
+      limit: limit,
+    );
+
+    print('📦 Raw data from Supabase: ${data.length} items');
+    return data.map((json) => Transaction.fromJson(json)).toList();
+  }
+
+  // Load transactions with filters into the shared list.
+  // Only screens showing the user's whole picture (home, analytics) should
+  // call this; filtered views should use [fetchTransactions] instead.
   Future<void> loadTransactions({
     String? type,
     String? paymentMethodId,
@@ -62,17 +98,7 @@ class TransactionProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      // ADD THIS: Check user BEFORE fetching
-      final currentUserId = SupabaseService.instance.currentUserId;
-      print('🔍 Loading transactions for user: $currentUserId');
-
-      if (currentUserId == null) {
-        print('❌ USER ID IS NULL - Cannot fetch transactions');
-        _transactions = [];
-        return;
-      }
-
-      final data = await _supabaseService.getTransactions(
+      _transactions = await fetchTransactions(
         type: type,
         paymentMethodId: paymentMethodId,
         categoryId: categoryId,
@@ -80,11 +106,7 @@ class TransactionProvider extends ChangeNotifier {
         endDate: endDate,
         limit: limit,
       );
-
-      print('📦 Raw data from Supabase: ${data.length} items');
-      _transactions = data.map((json) => Transaction.fromJson(json)).toList();
-      print('✅ Fetched ${_transactions.length} transactions for user: $currentUserId');
-
+      print('✅ Loaded ${_transactions.length} transactions into shared state');
     } catch (e) {
       print('❌ Error in loadTransactions: $e');
       _setError('Failed to load transactions: ${e.toString()}');

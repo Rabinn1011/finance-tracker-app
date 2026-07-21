@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/main_navigation.dart';
-import 'dart:math' as math;
+import '../../routes/app_routes.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -17,6 +18,7 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String _selectedPeriod = 'month'; // 'week', 'month', 'year'
+  String _breakdownType = 'expense'; // 'expense', 'income'
 
   @override
   void initState() {
@@ -50,12 +52,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final totalIncome = transactionProvider.totalIncome;
     final balance = totalIncome - totalExpenses;
 
-    // Calculate category breakdown
-    final expenses = transactionProvider.expenses;
+    // Calculate category breakdown for the selected type
+    final isExpenseBreakdown = _breakdownType == 'expense';
+    final breakdownTransactions =
+        isExpenseBreakdown ? transactionProvider.expenses : transactionProvider.income;
+    final breakdownTotal = isExpenseBreakdown ? totalExpenses : totalIncome;
+
     final categoryTotals = <String, double>{};
-    for (var transaction in expenses) {
+    // Keep the id alongside the name so a row can link to its filtered list.
+    final categoryIds = <String, String?>{};
+    for (var transaction in breakdownTransactions) {
       final categoryName = transaction.category?.name ?? 'Other';
       categoryTotals[categoryName] = (categoryTotals[categoryName] ?? 0) + transaction.amount;
+      categoryIds[categoryName] ??= transaction.category?.id;
     }
 
     // Sort by amount
@@ -183,12 +192,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               child: SizedBox(height: AppConstants.spacing32),
             ),
 
-            // Spending by Category Header
+            // Breakdown Type Selector
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacing24),
+                child: Row(
+                  children: [
+                    Expanded(child: _buildBreakdownButton('Spending', 'expense')),
+                    const SizedBox(width: AppConstants.spacing8),
+                    Expanded(child: _buildBreakdownButton('Earnings', 'income')),
+                  ],
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppConstants.spacing20),
+            ),
+
+            // Breakdown Header
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacing24),
                 child: Text(
-                  'SPENDING BY CATEGORY',
+                  isExpenseBreakdown ? 'SPENDING BY CATEGORY' : 'EARNINGS BY CATEGORY',
                   style: AppTextStyles.labelLarge.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -218,7 +245,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                       const SizedBox(height: AppConstants.spacing16),
                       Text(
-                        'No transactions for this period',
+                        isExpenseBreakdown
+                            ? 'No spending for this period'
+                            : 'No earnings for this period',
                         style: AppTextStyles.bodyLarge.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -232,69 +261,105 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 delegate: SliverChildBuilderDelegate(
                       (context, index) {
                     final category = sortedCategories[index];
-                    final percentage = totalExpenses > 0 ? (category.value / totalExpenses * 100) : 0;
+                    final percentage = breakdownTotal > 0 ? (category.value / breakdownTotal * 100) : 0;
                     final color = _getCategoryColor(index);
+                    final categoryId = categoryIds[category.key];
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppConstants.spacing24,
                         vertical: AppConstants.spacing8,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                        // Uncategorised rows ('Other') have no id to filter by.
+                        onTap: categoryId == null
+                            ? null
+                            : () => context.push(
+                                  '${AppRoutes.transactions}?categoryId=$categoryId'
+                                  '&type=${isExpenseBreakdown ? 'expense' : 'income'}',
+                                ),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppConstants.spacing16),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                            border: Border.all(
+                              color: AppColors.border,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: color,
-                                      shape: BoxShape.circle,
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: color,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: AppConstants.spacing8),
+                                        Expanded(
+                                          child: Text(
+                                            category.key,
+                                            style: AppTextStyles.bodyMedium,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(width: AppConstants.spacing8),
                                   Text(
-                                    category.key,
-                                    style: AppTextStyles.bodyMedium,
+                                    '${user?.currencySymbol ?? 'Rs.'} ${category.value.toStringAsFixed(2)}',
+                                    style: AppTextStyles.titleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  if (categoryId != null) ...[
+                                    const SizedBox(width: 2),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      size: 18,
+                                      color: AppColors.textTertiary,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: AppConstants.spacing8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+                                      child: LinearProgressIndicator(
+                                        value: percentage / 100,
+                                        backgroundColor: color.withOpacity(0.2),
+                                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                                        minHeight: 8,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppConstants.spacing8),
+                                  Text(
+                                    '${percentage.toStringAsFixed(1)}%',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
                                   ),
                                 ],
                               ),
-                              Text(
-                                '${user?.currencySymbol ?? 'Rs.'} ${category.value.toStringAsFixed(2)}',
-                                style: AppTextStyles.titleMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                             ],
                           ),
-                          const SizedBox(height: AppConstants.spacing8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-                                  child: LinearProgressIndicator(
-                                    value: percentage / 100,
-                                    backgroundColor: color.withOpacity(0.2),
-                                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                                    minHeight: 8,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: AppConstants.spacing8),
-                              Text(
-                                '${percentage.toStringAsFixed(1)}%',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
                     );
                   },
@@ -312,14 +377,38 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildPeriodButton(String label, String period) {
-    final isSelected = _selectedPeriod == period;
-    return InkWell(
+    return _buildToggleButton(
+      label: label,
+      isSelected: _selectedPeriod == period,
       onTap: () {
         setState(() {
           _selectedPeriod = period;
         });
         _loadData();
       },
+    );
+  }
+
+  Widget _buildBreakdownButton(String label, String type) {
+    return _buildToggleButton(
+      label: label,
+      isSelected: _breakdownType == type,
+      onTap: () {
+        // Data is already loaded for the period; only the filter changes.
+        setState(() {
+          _breakdownType = type;
+        });
+      },
+    );
+  }
+
+  Widget _buildToggleButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: AppConstants.spacing12),
         decoration: BoxDecoration(

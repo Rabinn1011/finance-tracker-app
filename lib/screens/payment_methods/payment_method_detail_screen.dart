@@ -8,6 +8,7 @@ import '../../providers/payment_method_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/payment_method_model.dart';
+import '../../models/transaction_model.dart';
 import '../../routes/app_routes.dart';
 
 class PaymentMethodDetailScreen extends StatefulWidget {
@@ -25,6 +26,11 @@ class PaymentMethodDetailScreen extends StatefulWidget {
 class _PaymentMethodDetailScreenState extends State<PaymentMethodDetailScreen> {
   PaymentMethod? _paymentMethod;
   bool _isLoading = true;
+  bool _isDeleting = false;
+
+  // Screen-local results. Kept out of TransactionProvider so this screen's
+  // payment-method filter doesn't overwrite the shared list.
+  List<Transaction> _transactions = [];
 
   @override
   void initState() {
@@ -42,20 +48,75 @@ class _PaymentMethodDetailScreenState extends State<PaymentMethodDetailScreen> {
     final method = paymentProvider.getById(widget.paymentMethodId);
 
     // Load all transactions for this payment method
-    await transactionProvider.loadTransactions(
+    final transactions = await transactionProvider.fetchTransactions(
       paymentMethodId: widget.paymentMethodId,
     );
 
+    if (!mounted) return;
     setState(() {
       _paymentMethod = method;
+      _transactions = transactions;
       _isLoading = false;
     });
+  }
+
+  Future<void> _confirmDelete(PaymentMethod method) async {
+    // Prevent multiple submissions
+    if (_isDeleting) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete payment method?'),
+        content: Text(
+          '"${method.name}" will be removed from your list. '
+          'Past transactions are kept and still count toward your totals.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isDeleting = true);
+
+    final paymentProvider = context.read<PaymentMethodProvider>();
+    final success = await paymentProvider.deletePaymentMethod(method.id);
+
+    if (!mounted) return;
+    setState(() => _isDeleting = false);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Payment method deleted'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      context.pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(paymentProvider.errorMessage ?? 'Failed to delete payment method'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    final transactionProvider = context.watch<TransactionProvider>();
     final user = authProvider.userProfile;
 
     if (_isLoading) {
@@ -103,7 +164,7 @@ class _PaymentMethodDetailScreenState extends State<PaymentMethodDetailScreen> {
     }
 
     final method = _paymentMethod!;
-    final transactions = transactionProvider.transactions;
+    final transactions = _transactions;
 
     // Calculate totals
     final totalIncome = transactions
@@ -130,6 +191,13 @@ class _PaymentMethodDetailScreenState extends State<PaymentMethodDetailScreen> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Delete payment method',
+            onPressed: _isDeleting ? null : () => _confirmDelete(method),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadData,

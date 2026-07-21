@@ -20,6 +20,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
 
   String _selectedType = 'ewallet'; // 'ewallet', 'bank', 'cash'
   String _selectedIcon = 'default';
+  bool _isSubmitting = false; // Add this to track submission state
 
   final Map<String, List<Map<String, String>>> _presetMethods = {
     'ewallet': [
@@ -49,6 +50,9 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
   }
 
   Future<void> _savePaymentMethod() async {
+    // Prevent multiple submissions
+    if (_isSubmitting) return;
+
     if (!_formKey.currentState!.validate()) return;
 
     final name = _nameController.text.trim();
@@ -66,12 +70,16 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
 
     final paymentProvider = context.read<PaymentMethodProvider>();
 
+    setState(() => _isSubmitting = true);
+
     final success = await paymentProvider.createPaymentMethod(
       name: name,
       type: _selectedType,
       icon: _selectedIcon,
       balance: balance,
     );
+
+    if (mounted) setState(() => _isSubmitting = false);
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +101,6 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final paymentProvider = context.watch<PaymentMethodProvider>();
     final presets = _presetMethods[_selectedType] ?? [];
 
     return Scaffold(
@@ -294,8 +301,8 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: paymentProvider.isLoading ? null : _savePaymentMethod,
-                    child: paymentProvider.isLoading
+                    onPressed: _isSubmitting ? null : _savePaymentMethod,
+                    child: _isSubmitting
                         ? const SizedBox(
                       height: 20,
                       width: 20,

@@ -12,18 +12,33 @@ import '../../routes/app_routes.dart';
 import '../../models/transaction_model.dart';
 
 class AllTransactionsScreen extends StatefulWidget {
-  const AllTransactionsScreen({super.key});
+  /// Pre-applied category filter, e.g. when arriving from Analytics.
+  final String? initialCategoryId;
+
+  /// Pre-applied type filter: 'expense' or 'income'.
+  final String? initialType;
+
+  const AllTransactionsScreen({
+    super.key,
+    this.initialCategoryId,
+    this.initialType,
+  });
 
   @override
   State<AllTransactionsScreen> createState() => _AllTransactionsScreenState();
 }
 
 class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
-  String _filterType = 'all'; // 'all', 'expense', 'income'
-  String? _filterCategory;
+  late String _filterType; // 'all', 'expense', 'income'
+  late String? _filterCategory;
   String? _filterPaymentMethod;
   final _searchController = TextEditingController();
   bool _showFilters = false;
+
+  // Screen-local results. Kept out of TransactionProvider so this screen's
+  // filters don't overwrite the shared list other screens read from.
+  List<Transaction> _transactions = [];
+  bool _isLoading = true;
 
   // Pagination variables
   int _currentLimit = 10;
@@ -33,6 +48,8 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
   @override
   void initState() {
     super.initState();
+    _filterType = widget.initialType ?? 'all';
+    _filterCategory = widget.initialCategoryId;
     _loadData();
   }
 
@@ -47,16 +64,27 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     final categoryProvider = context.read<CategoryProvider>();
     final paymentProvider = context.read<PaymentMethodProvider>();
 
-    await Future.wait([
-      transactionProvider.loadTransactions(
-        type: _filterType == 'all' ? null : _filterType,
-        categoryId: _filterCategory,
-        paymentMethodId: _filterPaymentMethod,
-        limit: _currentLimit,
-      ),
-      categoryProvider.loadCategories(),
-      paymentProvider.loadPaymentMethods(),
-    ]);
+    setState(() => _isLoading = true);
+
+    // Start all three together, then await each.
+    final transactionsFuture = transactionProvider.fetchTransactions(
+      type: _filterType == 'all' ? null : _filterType,
+      categoryId: _filterCategory,
+      paymentMethodId: _filterPaymentMethod,
+      limit: _currentLimit,
+    );
+    final categoriesFuture = categoryProvider.loadCategories();
+    final paymentsFuture = paymentProvider.loadPaymentMethods();
+
+    final transactions = await transactionsFuture;
+    await categoriesFuture;
+    await paymentsFuture;
+
+    if (!mounted) return;
+    setState(() {
+      _transactions = transactions;
+      _isLoading = false;
+    });
   }
 
   Future<void> _loadMoreTransactions() async {
@@ -68,14 +96,16 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     });
 
     final transactionProvider = context.read<TransactionProvider>();
-    await transactionProvider.loadTransactions(
+    final results = await transactionProvider.fetchTransactions(
       type: _filterType == 'all' ? null : _filterType,
       categoryId: _filterCategory,
       paymentMethodId: _filterPaymentMethod,
       limit: _currentLimit,
     );
 
+    if (!mounted) return;
     setState(() {
+      _transactions = results;
       _isLoadingMore = false;
     });
   }
@@ -115,13 +145,12 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final transactionProvider = context.watch<TransactionProvider>();
     final categoryProvider = context.watch<CategoryProvider>();
     final paymentProvider = context.watch<PaymentMethodProvider>();
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.userProfile;
 
-    final allTransactions = transactionProvider.transactions;
+    final allTransactions = _transactions;
     final filteredTransactions = _getFilteredTransactions(allTransactions);
 
     // Check if there might be more transactions to load
@@ -308,7 +337,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
             // Transactions List
             Expanded(
-              child: transactionProvider.isLoading && _currentLimit == 10
+              child: _isLoading && _currentLimit == 10
                   ? const Center(child: CircularProgressIndicator())
                   : filteredTransactions.isEmpty
                   ? Center(

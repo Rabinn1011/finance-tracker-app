@@ -99,10 +99,14 @@ class AppRouter {
       ),
 
       // Transactions list
+      // Optional filters: /transactions?categoryId=<uuid>&type=expense|income
       GoRoute(
         path: AppRoutes.transactions,
         name: 'AllTransactions',
-        builder: (context, state) => const AllTransactionsScreen(),
+        builder: (context, state) => AllTransactionsScreen(
+          initialCategoryId: state.uri.queryParameters['categoryId'],
+          initialType: state.uri.queryParameters['type'],
+        ),
       ),
 
       // Transaction detail
